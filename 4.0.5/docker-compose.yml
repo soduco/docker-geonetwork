@@ -21,9 +21,9 @@ services:
       - 80:80
     environment:
       # Only used for / redirect to default webapp
-      - NGINX_PUBLIC_HOST=localhost
+      - NGINX_PUBLIC_HOST=134.158.75.87
       #- NGINX_PUBLIC_HOST=apps.titellus.net
-      - NGINX_HOST=0.0.0.0
+      - NGINX_HOST=134.158.75.87
       - NGINX_PORT=80
     volumes:
       - ./nginx:/etc/nginx/templates
