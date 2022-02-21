@@ -1,7 +1,129 @@
-version: '3.1'
+version: '3.2'
+
+# volumes used and not bind mount. First volume shows how to build bind mount
+volumes:
+  geonetwork:
+  esdata:
+  esbackup:
+  pgdata:
+  pglog:
+
+networks:
+  gn-network:
+    driver: bridge
 
 services:
+  database:
+    image: postgis/postgis:11-2.5
+    environment:
+      POSTGRES_USER: geonetwork
+      POSTGRES_PASSWORD: geonetwork
+      POSTGRES_DB: geonetwork
+    command: [ "postgres",
+               "-c", "log_statement=all",
+               "-c", "logging_collector=true",
+               "-c", "log_file_mode=0644",
+               "-c", "log_directory=/var/log/postgresql",
+               "-c", "log_filename=postgresql.log"]
+    ports:
+      - 55432:5432
+    volumes:
+    # different methods to create bind mount
+      # long method:
+      # - type: bind
+      #   source: $PWD/bind/pgdata
+      #   target: /var/lib/postgresql/data
+      # - type: volume
+      #   source: pgdata
+      #   target: /var/lib/postgresql/data
+      # preferred method :
+      # - ./bind/pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+      - pglog:/var/log/postgresql
+    networks:
+      - gn-network
+
+  pgadmin4:
+    image: dpage/pgadmin4:2022-02-07-2
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+
+  elasticsearch:
+    image: elasticsearch:7.9.2
+    ports:
+      - 9200:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      ES_JAVA_OPTS: "-Xms1G -Xmx1G"
+      discovery.type: single-node
+      path.repo: "/usr/share/elasticsearch/backup"
+      # path.repo: "/usr/share/backup"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+      - esbackup:/usr/share/elasticsearch/backup
+    networks:
+      - gn-network
+
   geonetwork:
     build: 
-        context: .
-        dockerfile: Dockerfile.local
+      context: .
+      dockerfile: Dockerfile.local
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      DATA_DIR: /catalogue-data
+
+      JAVA_OPTS: >
+        -Dorg.eclipse.jetty.annotations.AnnotationParser.LEVEL=OFF
+        -Djava.security.egd=file:/dev/./urandom -Djava.awt.headless=true
+        -Xms512M -Xss512M -Xmx2G -XX:+UseConcMarkSweepGC
+        -Dgeonetwork.resources.dir=/catalogue-data/resources
+        -Dgeonetwork.data.dir=/catalogue-data
+        -Dgeonetwork.codeList.dir=/var/lib/jetty/webapps/geonetwork/WEB-INF/data/config/codelist
+        -Dgeonetwork.schema.dir=/var/lib/jetty/webapps/geonetwork/WEB-INF/data/config/schema_plugins
+
+      ES_HOST: elasticsearch
+      ES_PROTOCOL: http
+      ES_PORT: 9200
+
+      KB_URL: http://kibana:5601
+
+      GEONETWORK_DB_TYPE: postgres
+      GEONETWORK_DB_HOST: database
+      GEONETWORK_DB_PORT: 5432
+      GEONETWORK_DB_NAME: geonetwork
+      GEONETWORK_DB_USERNAME: geonetwork
+      GEONETWORK_DB_PASSWORD: geonetwork
+    volumes:
+      - geonetwork:/catalogue-data
+    depends_on:
+      - elasticsearch
+      - database
+    networks:
+      - gn-network
+
+
+  kibana:
+    image: kibana:7.9.2
+    environment:
+      SERVER_NAME: 'kibana'
+      ELASTICSEARCH_URL: http://elasticsearch:9200/
+      SERVER_BASEPATH: /geonetwork/dashboards
+      SERVER_REWRITEBASEPATH: 'false'
+      KIBANA_INDEX: .dashboards
+      XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: 'true'
+    ports:
+      - 5601:5601
+    networks:
+      - gn-network
