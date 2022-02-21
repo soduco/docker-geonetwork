@@ -4,6 +4,7 @@ volumes:
   geonetwork:
   esdata:
   esbackup:
+  kibanadata:
   pgdata:
   pglog:
   nginxlog:
@@ -123,3 +124,5 @@ services:
       XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: 'true'
     networks:
       - gn-network
+    volumes:
+      - kibanadata:/usr/share/kibana/data

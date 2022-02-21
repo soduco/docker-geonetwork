@@ -5,8 +5,10 @@ volumes:
   geonetwork:
   esdata:
   esbackup:
+  kibanadata:
   pgdata:
   pglog:
+  pgadmindata:
 
 networks:
   gn-network:
@@ -51,6 +53,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
+    volumes:
+      - pgadmindata:/var/lib/pgadmin
 
   elasticsearch:
     image: elasticsearch:7.9.2
@@ -125,5 +129,7 @@ services:
       XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: 'true'
     ports:
       - 5601:5601
+    volumes:
+      - kibanadata:/usr/share/kibana/data
     networks:
       - gn-network
