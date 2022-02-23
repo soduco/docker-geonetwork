@@ -3,10 +3,11 @@ version: '3.1'
 volumes:
   geonetwork:
   esdata:
+  esbackup:
+  kibanadata:
   pgdata:
   pglog:
   nginxlog:
-  apachelog:
 
 
 networks:
@@ -32,19 +33,6 @@ services:
       - geonetwork
     networks:
       - gn-network
-
-#  www:
-#    image: httpd
-#    ports:
-#      - 81:80
-#    volumes:
-#      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
-#      - ./apache/gn-httpd.conf:/usr/local/apache2/conf/gn-httpd.conf
-#      - apachelog:/usr/local/apache2/logs
-#    depends_on:
-#      - geonetwork
-#    networks:
-#      - gn-network
 
 
   database:
@@ -118,8 +106,10 @@ services:
     environment:
       ES_JAVA_OPTS: "-Xms1G -Xmx1G"
       discovery.type: single-node
+      path.repo: "/usr/share/elasticsearch/snapshots"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+      - esbackup:/usr/share/elasticsearch/snapshots
     networks:
       - gn-network
 
@@ -134,3 +124,5 @@ services:
       XPACK_MONITORING_UI_CONTAINER_ELASTICSEARCH_ENABLED: 'true'
     networks:
       - gn-network
+    volumes:
+      - kibanadata:/usr/share/kibana/data

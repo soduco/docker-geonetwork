@@ -1,4 +1,15 @@
-# Version 4.0.5
+# Important notes
+
+To change upload size, you need to modify inside the geonetwork container this file :
+```
+- path:
+/var/lib/jetty/webapps/geonetwork/WEB-INF/config.properties
+- variable line 45, expressed in bytes :
+api.params.maxUploadSize
+```
+
+
+# Official README (Version 4.0.5)
 
 ## Running with integrated Elasticsearch
 
