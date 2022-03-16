@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # geonetwork data
-docker run --rm --volumes-from 405_geonetwork_1 -v $(pwd)/backup:/backup ubuntu bash -c "tar xvf /backup/geonetwork.tar"
+docker run --rm --volumes-from 405_geonetwork_1 -v $(pwd)/volume_dump:/backup ubuntu bash -c "tar xvf backup/geonetwork.tar"
 # es data
 # docker run --rm --volumes-from 405_elasticsearch_1 -v $(pwd)/backup:/backup ubuntu bash -c "cd /usr/share/elasticsearch/data && tar xvf /backup/esdata.tar"
 #es snapshots
