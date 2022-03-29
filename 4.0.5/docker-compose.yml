@@ -125,17 +125,3 @@ services:
       - gn-network
     volumes:
       - kibanadata:/usr/share/kibana/data
-
-  angular-service: # The name of the service
-    container_name: angularcontainer  # Container name
-    build: ./geonetwork-ui # Location of our Dockerfile
-    volumes: # Volume binding
-      - './geonetwork-ui:/usr/src/app' 
-    ports: 
-      - '4200:4200' # Port mapping
-    depends_on:
-      - geonetwork
-    networks:
-      - gn-network
-    command: > 
-      bash -c "npm install && ng serve search --host 0.0.0.0 --port 4200"
